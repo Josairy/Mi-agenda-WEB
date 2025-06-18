@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agenda Multicapas</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>📒 Mi agenda WEB</h1>
+
+    <form id="formulario">
+      <input type="text" id="nombre" placeholder="Nombre" required />
+      <input type="text" id="apellido" placeholder="Apellido" required />
+      <input type="tel" id="telefono" placeholder="Teléfono" required />
+      <button type="submit">Agregar contacto</button>
+    </form>
+
+    <h2>📋 Contactos guardados</h2>
+    <ul id="lista-contactos">
+      <li>Cargando contactos...</li>
+    </ul>
+  </div>
+
+  <script>
+    const API_URL = 'http://www.raydelto.org/agenda.php';
+
+    async function cargarContactos() {
+      try {
+        const respuesta = await fetch(API_URL);
+        const contactos = await respuesta.json();
+        const lista = document.getElementById('lista-contactos');
+        lista.innerHTML = '';
+
+        if (contactos.length === 0) {
+          lista.innerHTML = '<li>No hay contactos registrados aún.</li>';
+          return;
+        }
+
+        contactos.forEach(contacto => {
+          const li = document.createElement('li');
+          li.textContent = `${contacto.nombre} ${contacto.apellido} - ${contacto.telefono}`;
+          lista.appendChild(li);
+        });
+      } catch (error) {
+        document.getElementById('lista-contactos').innerHTML =
+          '<li>Error al cargar los contactos.</li>';
+        console.error('Error:', error);
+      }
+    }
+
+    async function agregarContacto(evento) {
+      evento.preventDefault();
+
+      const nombre = document.getElementById('nombre').value.trim();
+      const apellido = document.getElementById('apellido').value.trim();
+      const telefono = document.getElementById('telefono').value.trim();
+
+      if (!nombre || !apellido || !telefono) {
+        alert('Por favor, completa todos los campos.');
+        return;
+      }
+
+      const nuevoContacto = { nombre, apellido, telefono };
+
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(nuevoContacto),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        evento.target.reset();
+        setTimeout(cargarContactos, 1000);
+      } catch (error) {
+        alert('Hubo un error al guardar el contacto.');
+        console.error('Error:', error);
+      }
+    }
+
+    document.getElementById('formulario').addEventListener('submit', agregarContacto);
+    cargarContactos();
+  </script>
+</body>
+</html>
